@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ishita — Fully Loaded</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coke-red: #F2001E;
+    --coke-red-dark: #B5000F;
+    --silver: #C9CDD2;
+    --silver-light: #E9EBED;
+    --ink: #0a0a0b;
+    --ink-soft: #1a1b1e;
+    --text-dim: #6f7479;
+    --fizz: #f7f8f9;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior: smooth; cursor: none; }
+  body{
+    background:
+      radial-gradient(ellipse 900px 600px at 12% -5%, rgba(242,0,30,0.07), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 18%, rgba(201,205,210,0.5), transparent 55%),
+      radial-gradient(ellipse 800px 600px at 8% 70%, rgba(201,205,210,0.35), transparent 55%),
+      radial-gradient(ellipse 900px 700px at 95% 95%, rgba(242,0,30,0.05), transparent 60%),
+      var(--fizz);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* faint can-ridge hairlines across the whole page */
+  body::after{
+    content:"";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: repeating-linear-gradient(
+      100deg,
+      transparent, transparent 64px,
+      rgba(10,10,11,0.018) 64px, rgba(10,10,11,0.018) 65px
+    );
+  }
+  /* ambient bubble field across the whole page, sits behind content */
+  #ambient-bubbles{
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .amb-bubble{
+    position: absolute; bottom: -40px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(201,205,210,0.08));
+    border: 1px solid rgba(10,10,11,0.06);
+    opacity: 0;
+    animation: amb-rise linear infinite;
+  }
+  @keyframes amb-rise{
+    0%{ transform: translateY(0) translateX(0); opacity: 0; }
+    8%{ opacity: .55; }
+    92%{ opacity: .4; }
+    100%{ transform: translateY(-112vh) translateX(var(--drift)); opacity: 0; }
+  }
+  @media (hover: none){ html{ cursor: auto; } }
+
+  ::selection{ background: var(--coke-red); color: #fff; }
+
+  body{ -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  img, svg{ -webkit-user-drag: none; user-drag: none; pointer-events: none; }
+
+  /* ---------- CUSTOM CURSOR ---------- */
+  #cursor-dot{
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--coke-red); pointer-events: none; z-index: 9999;
+    transform: translate(-50%,-50%); transition: width .15s, height .15s, background .15s;
+  }
+  #cursor-ring{
+    position: fixed; width: 34px; height: 34px; border-radius: 50%;
+    border: 1.5px solid var(--coke-red); pointer-events: none; z-index: 9998;
+    transform: translate(-50%,-50%); transition: width .2s, height .2s, opacity .2s, border-color .2s;
+    opacity: .6;
+  }
+  .cursor-active #cursor-ring{ width: 50px; height: 50px; opacity: .9; }
+  .cursor-active #cursor-dot{ width: 5px; height: 5px; }
+  @media (hover: none){
+    #cursor-dot, #cursor-ring{ display:none; }
+    .ripple{ border-width: 3px; }
+  }
+  @keyframes ripple-out-touch{
+    to{ width: 130px; height: 130px; opacity: 0; border-width: 0.5px; }
+  }
+  @media (hover: none){
+    .ripple{ animation-name: ripple-out-touch; animation-duration: .7s; }
+  }
+
+  .bubble{
+    position: fixed; pointer-events: none; z-index: 9997;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(201,205,210,0.15));
+    border: 1px solid rgba(242,0,30,0.25);
+    animation: rise 1.1s ease-out forwards;
+  }
+  @keyframes rise{
+    0%{ transform: translate(0,0) scale(1); opacity: .85; }
+    100%{ transform: translate(var(--dx), -70px) scale(0.2); opacity: 0; }
+  }
+
+  .fizz-burst{ position: fixed; pointer-events:none; z-index: 9996; }
+  .fizz-burst span{
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--coke-red);
+    animation: burst .6s ease-out forwards;
+  }
+  @keyframes burst{
+    to{ transform: translate(var(--bx), var(--by)) scale(0); opacity: 0; }
+  }
+  .ripple{
+    position: fixed; pointer-events:none; z-index: 9995;
+    border: 2px solid var(--coke-red); border-radius: 50%;
+    width: 10px; height: 10px;
+    transform: translate(-50%,-50%);
+    animation: ripple-out .6s ease-out forwards;
+  }
+  @keyframes ripple-out{
+    to{ width: 90px; height: 90px; opacity: 0; border-width: 0.5px; }
+  }
+
+  .wrap{ max-width: 1040px; margin: 0 auto; padding: 0 26px; position: relative; z-index: 1; }
+
+  /* can-tab divider */
+  .tab-divider{
+    display:flex; align-items:center; gap: 14px;
+    color: var(--text-dim); font-family:'Space Mono',monospace; font-size: 11px; letter-spacing:.1em;
+    margin: 0 0 18px;
+  }
+  .tab-divider::before, .tab-divider::after{ content:""; flex:1; height:1px; background: var(--silver); }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height: 88vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding: 60px 26px;
+    position: relative;
+  }
+  .hero-tag{
+    font-family:'Space Mono',monospace; font-size: 12px; letter-spacing:.25em;
+    color: var(--coke-red); text-transform: uppercase; margin-bottom: 22px;
+  }
+  .hero h1{
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 14vw, 160px);
+    line-height: 0.85;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+  }
+  .hero h1 .red{ color: var(--coke-red); }
+  .hero-quote{
+    margin-top: 26px;
+    max-width: 480px;
+    font-size: 16.5px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .scroll-hint{
+    margin-top: 48px;
+    font-family:'Space Mono',monospace; font-size: 11px; color: var(--text-dim);
+    letter-spacing:.15em;
+    animation: bob 2s ease-in-out infinite;
+  }
+  @keyframes bob{ 50%{ transform: translateY(6px); } }
+
+  /* shake the can button */
+  .can-button{
+    margin-top: 40px;
+    display:inline-flex; align-items:center; gap: 12px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 16px 26px;
+    font-family:'Space Mono',monospace; font-size: 12.5px; letter-spacing: .1em;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform .12s, background .2s;
+  }
+  .can-button:hover{ background: var(--coke-red); }
+  .can-button:active{ transform: scale(0.95); }
+  .can-button.shaking{ animation: shake-anim 0.4s ease-in-out; }
+  .can-icon{ font-size: 18px; display:inline-block; }
+  @keyframes shake-anim{
+    0%,100%{ transform: translateX(0) rotate(0); }
+    20%{ transform: translateX(-4px) rotate(-6deg); }
+    40%{ transform: translateX(4px) rotate(6deg); }
+    60%{ transform: translateX(-4px) rotate(-4deg); }
+    80%{ transform: translateX(4px) rotate(4deg); }
+  }
+  .shake-counter{
+    margin-top: 16px;
+    font-family:'Space Mono',monospace; font-size: 11px; color: var(--text-dim); letter-spacing: .08em;
+  }
+  #shake-count{ color: var(--coke-red); font-weight: 700; }
+
+  .can-spray{
+    position: fixed; inset: 0; pointer-events: none; z-index: 9994;
+  }
+  .can-spray span{
+    position: absolute; bottom: 0; left: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--coke-red);
+    animation: spray-up 1.1s cubic-bezier(.2,.7,.4,1) forwards;
+  }
+  @keyframes spray-up{
+    to{ transform: translate(var(--sx), var(--sy)) scale(0.3); opacity: 0; }
+  }
+
+  /* ---------- MOOD MATCHER ---------- */
+  .matcher{ padding: 0 0 100px; }
+  .matcher-intro{ color: var(--text-dim); font-size: 15.5px; margin-bottom: 26px; max-width: 520px; }
+  .mood-buttons{ display:flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+  .mood-btn{
+    font-family:'Space Mono',monospace; font-size: 12.5px; letter-spacing: .06em;
+    background: #fff; border: 1px solid var(--silver); color: var(--ink);
+    padding: 13px 20px; cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s, transform .15s;
+  }
+  .mood-btn:hover{ border-color: var(--coke-red); color: var(--coke-red); transform: translateY(-2px); }
+  .mood-btn.active{ background: var(--coke-red); border-color: var(--coke-red); color: #fff; }
+  .mood-result{
+    border: 1px solid var(--silver);
+    background: #fff;
+    padding: 28px 26px;
+    min-height: 90px;
+    display:flex; align-items:center;
+    transition: border-color .25s;
+  }
+  .mood-result.filled{ border-color: var(--coke-red); }
+  .mood-result-label{ font-family:'Space Mono',monospace; font-size: 12px; color: var(--text-dim); letter-spacing: .08em; }
+  .mood-result-content{ display:flex; flex-direction: column; gap: 6px; }
+  .mood-result-content .mr-car{ font-family:'Bebas Neue',sans-serif; font-size: 28px; color: var(--ink); }
+  .mood-result-content .mr-car span{ color: var(--coke-red); }
+  .mood-result-content .mr-track{ font-family:'Space Mono',monospace; font-size: 12px; color: var(--text-dim); }
+
+  /* fizz bubble decoration field in hero */
+  .deco-bubble{
+    position:absolute; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff, var(--silver-light));
+    border: 1px solid var(--silver);
+    opacity: .7;
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float{ 50%{ transform: translateY(-18px); } }
+
+  /* ---------- ABOUT ---------- */
+  .about{ padding: 90px 0; }
+  .about p{
+    font-size: clamp(19px, 2.4vw, 26px);
+    line-height: 1.65;
+    max-width: 760px;
+    color: var(--ink-soft);
+  }
+  .about p strong{ color: var(--coke-red); font-weight: 700; }
+
+  /* ---------- FAVOURITE THINGS GRID ---------- */
+  .section-title{
+    font-family:'Bebas Neue',sans-serif;
+    font-size: clamp(34px,5vw,54px);
+    margin-bottom: 36px;
+    letter-spacing: .01em;
+  }
+  .grid{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--silver);
+    border: 1px solid var(--silver);
+    margin-bottom: 100px;
+  }
+  .tile{
+    background: #fff;
+    padding: 34px 26px;
+    transition: background .25s, transform .25s;
+    position: relative;
+    overflow:hidden;
+  }
+  .tile:hover{ background: var(--ink); transform: translateY(-3px); z-index: 2; }
+  .tile:hover .tile-title, .tile:hover .tile-text{ color: #fff; }
+  .tile:hover .tile-icon{ color: var(--coke-red); }
+  .tile-icon{ font-family:'Bebas Neue',sans-serif; font-size: 13px; letter-spacing:.15em; color: var(--coke-red); margin-bottom: 16px; display:block; }
+  .tile-title{ font-family:'Bebas Neue',sans-serif; font-size: 26px; margin-bottom: 10px; transition: color .25s; }
+  .tile-text{ font-size: 14px; color: var(--text-dim); line-height: 1.55; transition: color .25s; }
+
+  /* ---------- DOSSIER ---------- */
+  .dossier{ padding: 0 0 100px; }
+  .dossier-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 0;
+    border-top: 1px solid var(--silver);
+  }
+  .dossier-row{
+    display:contents;
+  }
+  .d-label, .d-value{
+    padding: 18px 4px;
+    border-bottom: 1px solid var(--silver);
+    font-size: 15px;
+  }
+  .d-label{
+    font-family:'Space Mono',monospace; font-size: 11px; color: var(--text-dim);
+    letter-spacing: .08em; text-transform: uppercase; padding-right: 20px;
+  }
+  .d-value{ font-weight: 600; }
+  .d-value .red{ color: var(--coke-red); }
+
+  /* ---------- CARS / GARAGE ---------- */
+  .garage{ padding: 0 0 110px; }
+  .garage-intro{
+    max-width: 620px; color: var(--text-dim); font-size: 15.5px; line-height: 1.7;
+    margin-bottom: 44px;
+  }
+
+  .car-deck{
+    display:grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+    margin-bottom: 56px;
+  }
+  .car-card{
+    background: #fff;
+    border: 1px solid var(--silver);
+    overflow: hidden;
+    transition: border-color .25s, transform .25s;
+  }
+  .car-card:hover{ border-color: var(--coke-red); transform: translateY(-3px); }
+
+  .car-stage{
+    background: var(--ink);
+    padding: 18px 20px 10px;
+    position: relative;
+  }
+  .car-svg{ width: 100%; height: auto; display:block; }
+  .car-body path{ fill: var(--silver-light); }
+  .car-body .wheel{ fill: var(--ink-soft); stroke: var(--silver); stroke-width: 1.5; }
+  .car-body .cockpit{ fill: rgba(10,10,11,0.55); }
+  .car-f1 .car-body path:not(.wing):not(.cockpit){ fill: var(--coke-red); }
+  .car-f1 .car-body .wing{ fill: var(--ink-soft); }
+  .car-ferrari .car-body path:not(.cockpit){ fill: var(--coke-red); }
+  .car-bmw .car-body path:not(.cockpit){ fill: var(--silver-light); }
+  .car-porsche .car-body path:not(.cockpit){ fill: var(--silver-light); }
+  .car-mercedes .car-body path:not(.cockpit){ fill: #e3e5e8; }
+  .car-rover .car-body path:not(.cockpit):not(rect){ fill: var(--ink-soft); }
+  .car-rover .car-body rect{ fill: rgba(10,10,11,0.5); }
+
+  .car-info{ padding: 20px 22px 24px; }
+  .car-head{ display:flex; align-items:baseline; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+  .car-head .car-name{ font-family:'Bebas Neue',sans-serif; font-size: 26px; letter-spacing: .01em; }
+  .car-tag{ font-family:'Space Mono',monospace; font-size: 10px; letter-spacing: .1em; color: var(--coke-red); white-space: nowrap; }
+  .car-desc{ font-size: 14px; line-height: 1.6; color: var(--text-dim); margin-bottom: 16px; }
+  .car-stats{ display:flex; flex-wrap: wrap; gap: 8px 16px; font-family:'Space Mono',monospace; font-size: 11px; color: var(--ink-soft); }
+  .car-stats b{ color: var(--coke-red); font-weight: 700; margin-right: 4px; }
+
+  .garage-quote{
+    margin-top: 50px;
+    text-align: center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size: clamp(26px,4.5vw,42px);
+    color: var(--coke-red);
+    letter-spacing: .01em;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    background: var(--ink);
+    color: var(--silver-light);
+    padding: 70px 26px;
+    text-align:center;
+    margin-top: 40px;
+    position: relative; z-index: 1;
+  }
+  footer .can-label{
+    font-family:'Bebas Neue',sans-serif; font-size: clamp(30px,5vw,48px);
+    color: #fff; margin-bottom: 14px;
+  }
+  footer .can-label .red{ color: var(--coke-red); }
+  footer p{ font-size: 14px; color: var(--silver); max-width: 420px; margin: 0 auto 30px; line-height: 1.6; }
+  footer a{
+    display:inline-block;
+    font-family:'Space Mono',monospace; font-size: 13px; letter-spacing:.06em;
+    color: var(--ink); background: var(--coke-red);
+    padding: 14px 26px; text-decoration:none;
+    transition: background .2s, transform .2s;
+  }
+  footer a:hover{ background: #fff; transform: translateY(-2px); }
+  .fineprint{ margin-top: 36px; font-family:'Space Mono',monospace; font-size: 10.5px; color: #54565a; letter-spacing: .04em; }
+
+  @media (max-width: 720px){
+    .grid{ grid-template-columns: 1fr 1fr; }
+    .dossier-grid{ grid-template-columns: 1fr; }
+    .about p{ font-size: 20px; }
+    .car-deck{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<div id="ambient-bubbles"></div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">@ishita_luthra16 · a little fizzy corner of the internet</div>
+    <h1>ISHITA <span class="red">&amp;</span><br>HER ESSENTIALS</h1>
+    <p class="hero-quote">"Equal parts horsepower, bass line, and a Diet Coke that's somehow always cold."</p>
+    <div class="scroll-hint">scroll ↓ · tap anywhere ✦</div>
+
+    <button id="shake-can" class="can-button" aria-label="Shake the can">
+      <span class="can-button-label">SHAKE THE CAN</span>
+      <span class="can-icon">🥤</span>
+    </button>
+    <div id="shake-counter" class="shake-counter">cans cracked open: <span id="shake-count">0</span></div>
+  </section>
+
+  <section class="about">
+    <div class="tab-divider">CRACK OPEN</div>
+    <p>Ishita runs on a very specific kind of fuel — engine notes, Drake on repeat, and a can of <strong>Diet Coke</strong> that never seems to run dry. She'll tell you about a car's 0–60 time before she tells you her own plans for the weekend, and her ideal Sunday involves a race start time and absolutely nothing else on the calendar.</p>
+  </section>
+
+  <section class="favourites">
+    <div class="tab-divider">FAVOURITE THINGS</div>
+    <h2 class="section-title">Her Lineup</h2>
+    <div class="grid">
+      <div class="tile">
+        <span class="tile-icon">01 — MUSIC</span>
+        <div class="tile-title">Drake on Loop</div>
+        <div class="tile-text">OVO from the first track to the last. New drop or deep cut, it's the soundtrack to every drive.</div>
+      </div>
+      <div class="tile">
+        <span class="tile-icon">02 — SUNDAYS</span>
+        <div class="tile-title">Formula 1</div>
+        <div class="tile-text">Lights out and away. Grid walks, strategy calls, and zero plans during a race weekend.</div>
+      </div>
+      <div class="tile">
+        <span class="tile-icon">03 — OBSESSION</span>
+        <div class="tile-title">Cars, Always</div>
+        <div class="tile-text">Spec sheets for fun, garage tours on repeat, an opinion on every engine note.</div>
+      </div>
+      <div class="tile">
+        <span class="tile-icon">04 — FUEL</span>
+        <div class="tile-title">Diet Coke</div>
+        <div class="tile-text">Ice cold, zero sugar, non-negotiable. The actual fuel sponsor of every long day.</div>
+      </div>
+      <div class="tile">
+        <span class="tile-icon">05 — VOLUME</span>
+        <div class="tile-title">Loud, Proud</div>
+        <div class="tile-text">Music up, windows down — the only acceptable way to drive anywhere.</div>
+      </div>
+      <div class="tile">
+        <span class="tile-icon">06 — RITUAL</span>
+        <div class="tile-title">Race + Refill</div>
+        <div class="tile-text">A race on screen and a can within arm's reach — the full Sunday setup.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="matcher">
+    <div class="tab-divider">QUICK MATCH</div>
+    <h2 class="section-title">What's The Mood?</h2>
+    <p class="matcher-intro">Pick a mood, get the car (and the soundtrack) that fits it.</p>
+    <div class="mood-buttons">
+      <button class="mood-btn" data-mood="race">Race Day</button>
+      <button class="mood-btn" data-mood="midnight">Midnight Drive</button>
+      <button class="mood-btn" data-mood="main">Main Character</button>
+      <button class="mood-btn" data-mood="chill">Slow Sunday</button>
+    </div>
+    <div id="mood-result" class="mood-result">
+      <span class="mood-result-label">pick a mood ↑</span>
+    </div>
+  </section>
+
+  <section class="dossier">
+    <div class="tab-divider">A TINY DOSSIER</div>
+    <h2 class="section-title">The Fine Print</h2>
+    <div class="dossier-grid">
+      <div class="d-label">Comfort Drink</div><div class="d-value">Diet Coke, <span class="red">ice cold</span></div>
+      <div class="d-label">Race Day Mood</div><div class="d-value">Lights out, headphones in</div>
+      <div class="d-label">Current Obsession</div><div class="d-value">Whatever Drake just dropped</div>
+      <div class="d-label">Dream Garage Slot</div><div class="d-value">Still being decided, daily</div>
+      <div class="d-label">Communication Style</div><div class="d-value">Voice notes &amp; race commentary</div>
+      <div class="d-label">Weekend Mood</div><div class="d-value">Race → drive → <span class="red">refill</span></div>
+    </div>
+  </section>
+
+  <section class="garage">
+    <div class="tab-divider">CARS ON HER MIND</div>
+    <h2 class="section-title">The Garage</h2>
+    <p class="garage-intro">Six cars, six completely different reasons to love them — the screaming open-wheel weapon, the red Italian icon, the German cult classics, and the SUV built for arriving in style. This is the lineup that lives rent-free in her head.</p>
+
+    <div class="car-deck">
+
+      <article class="car-card">
+        <div class="car-stage car-f1">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M10 70 L40 70 L55 50 L150 46 L185 58 L225 58 L230 68 L225 72 L20 72 Z"/>
+            <path d="M150 46 L190 30 L205 30 L205 46 Z" class="wing"/>
+            <path d="M55 50 L70 34 L100 34 L108 46 Z" class="cockpit"/>
+            <circle cx="55" cy="74" r="13" class="wheel"/>
+            <circle cx="195" cy="74" r="13" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">Formula 1</span><span class="car-tag">SPORT</span></div>
+          <p class="car-desc">Not one car but the whole circus — twenty drivers, one Sunday, zero margin for error. She's in it for the strategy calls as much as the speed: undercuts, tire gambles, a single lap that decides a season.</p>
+          <div class="car-stats">
+            <span><b>0–100</b> 2.6s</span>
+            <span><b>TOP SPEED</b> 350+ km/h</span>
+            <span><b>VIBE</b> controlled chaos</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="car-card">
+        <div class="car-stage car-ferrari">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M14 68 C14 55 30 50 45 50 L75 34 C85 28 150 28 162 36 L190 50 C205 50 222 56 224 66 L224 70 L14 70 Z"/>
+            <path d="M75 34 L90 38 L150 38 L162 36" class="cockpit"/>
+            <circle cx="58" cy="72" r="13" class="wheel"/>
+            <circle cx="190" cy="72" r="13" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">Ferrari</span><span class="car-tag">ICON</span></div>
+          <p class="car-desc">Rosso Corsa, that V8 scream, and a badge that needs no explanation. The kind of car that doesn't just drive past — it announces itself first.</p>
+          <div class="car-stats">
+            <span><b>0–100</b> 2.9s</span>
+            <span><b>SOUND</b> unmistakable</span>
+            <span><b>VIBE</b> loud &amp; proud</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="car-card">
+        <div class="car-stage car-bmw">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M12 68 C12 52 35 48 50 48 L70 32 C80 26 155 26 168 34 L195 48 C210 48 226 54 228 66 L228 70 L12 70 Z"/>
+            <path d="M70 32 L88 36 L155 36 L168 34" class="cockpit"/>
+            <circle cx="56" cy="72" r="13" class="wheel"/>
+            <circle cx="194" cy="72" r="13" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">BMW</span><span class="car-tag">DAILY HEAT</span></div>
+          <p class="car-desc">Clean lines and a straight-six hum that sounds better at 11pm than it does at noon. Her pick for midnight drives with nowhere in particular to be.</p>
+          <div class="car-stats">
+            <span><b>ENGINE</b> straight-six</span>
+            <span><b>BEST AT</b> night</span>
+            <span><b>VIBE</b> understated</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="car-card">
+        <div class="car-stage car-porsche">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M16 68 C16 48 30 32 60 30 C95 26 150 28 175 38 C205 42 226 52 228 66 L228 70 L16 70 Z"/>
+            <path d="M60 30 C90 26 140 28 175 38" class="cockpit"/>
+            <circle cx="58" cy="72" r="13" class="wheel"/>
+            <circle cx="192" cy="72" r="13" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">Porsche 911</span><span class="car-tag">TIMELESS</span></div>
+          <p class="car-desc">The same silhouette since 1963, and it still turns heads on every corner. Proof that you don't need to reinvent something that was already right.</p>
+          <div class="car-stats">
+            <span><b>SINCE</b> 1963</span>
+            <span><b>SHAPE</b> never changes</span>
+            <span><b>VIBE</b> quietly perfect</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="car-card">
+        <div class="car-stage car-mercedes">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M14 68 C14 54 28 50 44 50 L66 34 C76 28 158 28 170 36 L196 50 C208 50 224 54 226 66 L226 70 L14 70 Z"/>
+            <path d="M66 34 L84 38 L158 38 L170 36" class="cockpit"/>
+            <circle cx="56" cy="72" r="13" class="wheel"/>
+            <circle cx="190" cy="72" r="13" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">Mercedes</span><span class="car-tag">QUIET LUXURY</span></div>
+          <p class="car-desc">Doesn't try, doesn't need to. Heated seats, a smooth ride, and the kind of presence that doesn't require a loud exhaust to be felt.</p>
+          <div class="car-stats">
+            <span><b>SEATS</b> always warm</span>
+            <span><b>RIDE</b> silent</span>
+            <span><b>VIBE</b> effortless</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="car-card">
+        <div class="car-stage car-rover">
+          <svg viewBox="0 0 240 90" class="car-svg"><g class="car-body">
+            <path d="M16 70 L16 40 C16 34 22 30 30 30 L195 30 C205 30 212 36 212 44 L226 44 L228 60 L226 70 Z"/>
+            <rect x="40" y="34" width="150" height="16" class="cockpit"/>
+            <circle cx="55" cy="72" r="14" class="wheel"/>
+            <circle cx="190" cy="72" r="14" class="wheel"/>
+          </g></svg>
+        </div>
+        <div class="car-info">
+          <div class="car-head"><span class="car-name">Range Rover</span><span class="car-tag">BIG ENERGY</span></div>
+          <p class="car-desc">Tall, commanding, and built to make an entrance — city traffic or no city traffic. The arrive-in-style pick when nothing else will do.</p>
+          <div class="car-stats">
+            <span><b>STANCE</b> commanding</span>
+            <span><b>BEST FOR</b> the city</span>
+            <span><b>VIBE</b> main character</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="garage-quote">"Life's too short to drive boring cars — or drink regular Coke."</div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="can-label">ISHITA <span class="red">●</span> FULLY LOADED</div>
+  <p>Drake in the speakers, a race on somewhere, and a Diet Coke going flat in the cupholder. Tap anywhere — the fizz follows you.</p>
+  <a href="https://www.instagram.com/ishita_luthra16" target="_blank" rel="noopener">FOLLOW @ISHITA_LUTHRA16 →</a>
+</footer>
+
+<script>
+  // Custom cursor follow
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  let lastBubble = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+
+    const now = Date.now();
+    if(now - lastBubble > 60){
+      lastBubble = now;
+      spawnBubble(mx, my);
+    }
+  });
+
+  function animateRing(){
+    rx += (mx - rx) * 0.18;
+    ry += (my - ry) * 0.18;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, .tile, .car-row, .hero-cta').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-active'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-active'));
+  });
+
+  function spawnBubble(x, y){
+    const b = document.createElement('div');
+    const size = 4 + Math.random() * 7;
+    b.className = 'bubble';
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = (x + (Math.random()*16 - 8)) + 'px';
+    b.style.top = (y + (Math.random()*16 - 8)) + 'px';
+    b.style.setProperty('--dx', (Math.random()*30 - 15) + 'px');
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 1150);
+  }
+
+  // Tap / click fizz burst + ripple
+  function fizzBurst(x, y){
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = x + 'px'; ripple.style.top = y + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+
+    const burst = document.createElement('div');
+    burst.className = 'fizz-burst';
+    burst.style.left = x + 'px'; burst.style.top = y + 'px';
+    const count = 10;
+    for(let i=0;i<count;i++){
+      const s = document.createElement('span');
+      const angle = (Math.PI * 2 * i) / count + Math.random()*0.4;
+      const dist = 30 + Math.random()*40;
+      s.style.setProperty('--bx', Math.cos(angle)*dist + 'px');
+      s.style.setProperty('--by', Math.sin(angle)*dist + 'px');
+      s.style.background = i % 3 === 0 ? '#C9CDD2' : '#F2001E';
+      burst.appendChild(s);
+    }
+    document.body.appendChild(burst);
+    setTimeout(() => burst.remove(), 650);
+  }
+
+  // ---- basic copy deterrents (not foolproof, just raises friction) ----
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('cut', e => e.preventDefault());
+  document.addEventListener('dragstart', e => e.preventDefault());
+  document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    const blocked =
+      e.key === 'F12' ||
+      (e.ctrlKey && ['u','s','c','p'].includes(k)) ||
+      (e.metaKey && ['u','s','c','p'].includes(k)) ||
+      (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
+      (e.metaKey && e.altKey && ['i','j','c'].includes(k));
+    if (blocked) e.preventDefault();
+  });
+
+  document.addEventListener('click', (e) => fizzBurst(e.clientX, e.clientY));
+
+  // Mobile: tap burst + light bubble trail while finger moves
+  let lastTouchBubble = 0;
+  document.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    fizzBurst(t.clientX, t.clientY);
+    spawnBubble(t.clientX, t.clientY);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    const now = Date.now();
+    if(now - lastTouchBubble > 70){
+      lastTouchBubble = now;
+      spawnBubble(t.clientX, t.clientY);
+    }
+  }, { passive: true });
+
+  // ---- shake the can ----
+  let shakeCount = 0;
+  const shakeBtn = document.getElementById('shake-can');
+  const shakeCountEl = document.getElementById('shake-count');
+  shakeBtn.addEventListener('click', () => {
+    shakeCount++;
+    shakeCountEl.textContent = shakeCount;
+    shakeBtn.classList.remove('shaking');
+    void shakeBtn.offsetWidth;
+    shakeBtn.classList.add('shaking');
+    sprayCan();
+  });
+
+  function sprayCan(){
+    const rect = shakeBtn.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const layer = document.createElement('div');
+    layer.className = 'can-spray';
+    const count = 26;
+    for(let i=0;i<count;i++){
+      const s = document.createElement('span');
+      const angle = -Math.PI/2 + (Math.random()*1.4 - 0.7);
+      const dist = 120 + Math.random()*220;
+      s.style.setProperty('--sx', Math.cos(angle)*dist*0.5 + 'px');
+      s.style.setProperty('--sy', Math.sin(angle)*dist + 'px');
+      s.style.left = (originX + (Math.random()*30-15)) + 'px';
+      s.style.bottom = (window.innerHeight - rect.top) + 'px';
+      s.style.background = i % 3 === 0 ? '#C9CDD2' : '#F2001E';
+      layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 1200);
+  }
+
+  // ---- mood to car matcher ----
+  const moodData = {
+    race: { car: 'Formula 1', track: 'soundtrack: pure engine noise', },
+    midnight: { car: 'BMW', track: 'soundtrack: Drake, low volume, windows down' },
+    main: { car: 'Range Rover', track: 'soundtrack: whatever\'s loudest right now' },
+    chill: { car: 'Mercedes', track: 'soundtrack: nothing, just the hum' },
+  };
+  const moodResult = document.getElementById('mood-result');
+  document.querySelectorAll('.mood-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const data = moodData[btn.dataset.mood];
+      moodResult.classList.add('filled');
+      moodResult.innerHTML = `<div class="mood-result-content"><span class="mr-car">→ <span>${data.car}</span></span><span class="mr-track">${data.track}</span></div>`;
+    });
+  });
+
+  // ambient rising bubbles across the whole page background
+  const ambField = document.getElementById('ambient-bubbles');
+  function spawnAmbientBubble(){
+    const b = document.createElement('div');
+    b.className = 'amb-bubble';
+    const size = 4 + Math.random() * 14;
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = (Math.random() * 100) + 'vw';
+    const duration = 10 + Math.random() * 14;
+    b.style.animationDuration = duration + 's';
+    b.style.setProperty('--drift', (Math.random()*80 - 40) + 'px');
+    ambField.appendChild(b);
+    setTimeout(() => b.remove(), duration * 1000 + 200);
+  }
+  for(let i=0;i<14;i++){
+    setTimeout(() => spawnAmbientBubble(), i * 700);
+  }
+  setInterval(spawnAmbientBubble, 1300);
+
+  // decorative floating bubbles in hero
+  const hero = document.querySelector('.hero');
+  for(let i=0;i<7;i++){
+    const d = document.createElement('div');
+    d.className = 'deco-bubble';
+    const size = 10 + Math.random()*26;
+    d.style.width = size+'px'; d.style.height = size+'px';
+    d.style.left = (Math.random()*90)+'%';
+    d.style.top = (10 + Math.random()*70)+'%';
+    d.style.animationDelay = (Math.random()*4)+'s';
+    d.style.animationDuration = (4 + Math.random()*4)+'s';
+    hero.appendChild(d);
+  }
+</script>
+
+</body>
+</html>
